@@ -1,10 +1,16 @@
 >git init 
 Initalise a repo
 
+>git remote add origin <repo link>
+Add a repo with the name origin
+
 >git status
 Changes made between working directory files and the previous commit.
 
-working directory -> staging area -> repo
+>git add
+>git commit -m "message"
+>git push origin master
+working directory -> staging area -> repo -> push
 
 All files are "untracked" by Git until it's been told otherwise.
 
@@ -128,5 +134,5 @@ When want to merge one single file from a branch to the master, or one particula
 
 >git cherry-pick 
 
-=======
->>>>>>> 758f899... Created a directory which contains all git practices
+>git rebase -i 
+Can rewrite git history.
