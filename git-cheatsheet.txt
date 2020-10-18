@@ -1,0 +1,132 @@
+>git init 
+Initalise a repo
+
+>git status
+Changes made between working directory files and the previous commit.
+
+working directory -> staging area -> repo
+
+All files are "untracked" by Git until it's been told otherwise.
+
+All files which are been worked upon are in the working directory. We can move any file to the staging area before comitting it.
+
+Scenario:-
+
+>git status
+
+modified : filename 
+( Changes made to a file in the working directory to a committed file not moved to the
+staging area)
+
+>git diff 
+Compare changes in current working directory to the previous commit. (Compares to the head commit by default.)
+
+>git diff <commit-hash>
+provide a hash of the commit as the parameter to compare with a different commit.
+
+>git diff <filename>
+Comapre changes made to a single file.
+
+>git difftool
+Load an external tool of choice to view the comparison. (Easier to read)
+
+** git diff will only comapre files in the working direcotry.
+
+>git diff --staged
+Compares files in the staging area.
+
+> git log - allows to view the history of repo and the commit log.
+
+>git log --pretty=format:"%h %an %ar - %s"
+To view each commit on a single line.
+
+>git show
+Changes made in the commit
+
+>git remote add origin 'url or ssh' 
+Add a remote repo to your current working directory as origin.
+
+>git show
+Changes made in the commit
+
+>git push 'repo name' 'branch' (probably the master branch)
+push your commits to the remote repository.
+
+>git pull
+Allows to make changes from a remote repo to your current repo.
+
+>git fetch
+Download the changes made to the repo in a different branch.
+<<<<<<< HEAD
+
+**UNDOING CHANGES**
+>git checkout .
+Replace everything in the current directory to the last committed version.
+
+>git checkout <filename>
+Will replace the filename provided.
+
+>git reset
+Move files back from the staging area to the working directory.
+
+>git reset --hard
+Combine both git reset and git checkout in a single command.
+
+>git revert
+Undo the commit already made.
+
+If not pushed yet, 
+
+>git reset HEAD (will do the same).
+
+>git revert HEAD...HEAD~2
+Reverts commits between HEAD and HEAD~2.
+
+**Fixing Merge Errors**
+
+>git branch
+Lists the branches, and the current branch.
+
+>git branch <branchname> 
+Creates a branch.
+
+>git checkout branchname.
+Switches the branch. 
+
+>git merge <branchname>
+Merges the branch with the current branch.
+
+>git log -p
+To output the commit information with the changes made.
+
+>git log -p -n 2
+Limits the number of commits to display (-n 2) from HEAD and HEAD~1
+
+**FINDING BUGS USING BISECT**
+
+>git bisect start
+Enter the bisect mode.
+
+>git bisect bad
+Define where the bad commit happened. 
+
+>git bisect good HEAD~5
+Define where the good commit is (5 commits ago in our case). This  will checkout all the commits between the bad and good.
+
+>git bisect good
+Tells git that we are happy with the particular commit.
+
+>git blame <file>
+Shows the changes made and the name of the author. Shows who touched each line.
+
+>git blame -L 6,8 <filename>
+Can specify line numbers if we know the exact place the error occurs.
+
+**Being picky with git**
+
+When want to merge one single file from a branch to the master, or one particular commit.
+
+>git cherry-pick 
+
+=======
+>>>>>>> 758f899... Created a directory which contains all git practices
