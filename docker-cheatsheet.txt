@@ -11,17 +11,14 @@
 >docker images
 
 
-
 2.Search for images in docker hub.
 
 >docker search redis
 
 
-
 3.Download the image from docker hub to the loacal machine.
 
 >docker pull redis
-
 
 
 4. Start the service
@@ -31,7 +28,6 @@
 (-d command specifies that the service should run in the background.)
 
 
-
 5. Starting another service like ubuntu which requires a shell.
 
 docker run -i -t --name <anyname> ubuntu /bin/bash
@@ -39,11 +35,9 @@ docker run -i -t --name <anyname> ubuntu /bin/bash
 (-i is interactive, -t assigns a terminal and /bin/bash assigns the shell to the terminal.)
 
 
-
 6.Check status of the docker engine:-
 
 service docker status
-
 
 
 7.Start a container
@@ -57,7 +51,6 @@ docker start containername
 docker attach containername
 
 
-
 9. Check all running containers
 
 docker ps -a  (if the flag -a is not included, then only the running containers are displayed.)
@@ -67,11 +60,9 @@ OR if you want more details about the container,
 docker inspect <containername> or <container-id> 
 
 
-
 10. Stop the container.
 
 docker stop <container-name>
-
 
 
 11.Delete a container
