@@ -1,0 +1,515 @@
+							----------------------
+							**DOCKER CHEATSHEET**
+							------------------------
+
+				-------------
+				Basic commands:-
+				-------------
+
+1. Check all images available on your machine.
+
+>docker images
+
+
+
+2.Search for images in docker hub.
+
+>docker search redis
+
+
+
+3.Download the image from docker hub to the loacal machine.
+
+>docker pull redis
+
+
+
+4. Start the service
+
+> docker run --d  redis 
+
+(-d command specifies that the service should run in the background.)
+
+
+
+5. Starting another service like ubuntu which requires a shell.
+
+docker run -i -t --name <anyname> ubuntu /bin/bash
+
+(-i is interactive, -t assigns a terminal and /bin/bash assigns the shell to the terminal.)
+
+
+
+6.Check status of the docker engine:-
+
+service docker status
+
+
+
+7.Start a container
+
+docker start containername
+
+
+
+8. Go inside a container
+
+docker attach containername
+
+
+
+9. Check all running containers
+
+docker ps -a  (if the flag -a is not included, then only the running containers are displayed.)
+
+OR if you want more details about the container,  
+
+docker inspect <containername> or <container-id> 
+
+
+
+10. Stop the container.
+
+docker stop <container-name>
+
+
+
+11.Delete a container
+
+docker rm <container-name>
+
+
+*****
+12. Check logs
+
+docker logs <container-name> | <container-id>
+
+
+				---------
+				Port mapping:-
+				---------
+
+EVERY DOCKER CONTAINER IS SANDBOXED AND ISOLATED.
+If any other service not in the container, wants to access it. The port of the service inside the container has to be exposed
+via host.
+
+> docker run -d  --name RedisPort -p 6379:6379 redis
+
+> docker run -d --name RedisPort -p 6379 redis (Will assign any port on the Host.)
+
+>docker run -d --name RedisPort -p 127.0.0.1:6379:6379 (Can specify a particular IP address.)
+
+** Data storage ( can bind a local directory on the host with a directory inside the container.)
+
+> docker run -d --name redisMapped -v /opt/docker/data/redis:/data redis
+
+(By default redis image stores logs and data in /data directory.)
+
+				----------------------------
+				**Building a container image.
+				-----------------------
+
+1. Create a Dockerfile. (It contains a bunch of commands to be executed.)
+
+Always starts with a base image. 
+
+FROM nginx:<any-tag> (tag includes the version number :latest will get the latest version.)
+
+Inside the docker file, 
+
+RUN is used to execute any commands in the command prompt. 
+
+COPY is used to copy a file from directory containing the docker file to the containers image.
+
+EXPOSE 80,443, 7000-8000 		--> can define the port number in any way.
+
+***CMD defines the command to be run when the container is launched.
+*** If the comand requires any arguments, it is recommended to use an array.
+
+["cmd","-a","arga value"]
+
+
+
+Dockerfile contents example :-
+
+FROM nginx:1.11-alpine 						----> Create nginx web server with the specific version
+
+COPY index.html /usr/share/nginx/html/index.html		----> copies the file from current dir to the container image. 
+
+EXPOSE 80							----> Tells the docker which ports should be open.
+
+CMD ["nginx", "-g", "daemon off;"]				----> Commands to run when the container launches.
+
+
+
+***Build the docker file
+
+docker build -t <name>:latest
+
+				-------------------------
+				Dockerfile for Node example:-
+				-------------------------
+
+FROM node:10-alpine  			----> Base image
+
+RUN mkdir -p /src/app			----> Creates a dir inside the container.
+
+WORKDIR /src/app			----> Sets the work directory as /src/app
+
+COPY package.json /src/app/package.json	-----> copies the file to the container dir.
+
+RUN nmp install				-----> Install the dependencies.
+
+COPY . /src/app				----> copy all the files to the work dir.
+
+EXPOSE 3000				----> open port.
+
+CMD ["npm", "start"]
+
+
+				-------------------------------
+				***Defining environment variables
+				-------------------------------
+
+Environment variables can be defined when we launch the container by using -e argument.
+
+eg:-
+
+docker run -d --name myapp -p 3000 -e NODE_ENV=production node 
+
+
+
+
+				-------
+				Docker on-build:-
+				-------
+
+Instructions can be executed later when the image is being used as the base for another image.
+
+eg:-
+
+FROM node:7
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+ONBUILD COPY package.json /usr/src/app/
+ONBUILD RUN npm install
+ONBUILD COPY . /usr/src/app
+CMD [ "npm", "start" ]
+
+We can build this image, but the application sepcific instructions wont be exeucted till it is used as a base image.
+
+				----------
+				Ingoring Files
+				----------
+
+We can add .dockerignore to prevent sensitive or unnecessary files from being included in the image.
+
+
+
+				---------
+				Docker data containers
+				----------
+
+A container storing data or a database.
+One approach is seen in directory mapping.
+
+>docker create -v /config --name dataContainer busybox
+
+-v 				------> where other containers will be storing or reading data from.
+
+
+
+2. Copy file to the data container:-
+
+> docker cp  config.conf dataContainer:/config/
+
+
+				--------------
+				Communication between containers using links
+				--------------
+
+* --link <container-name|id>:<alias>
+
+docker run --link redis-server:redis alpine 
+
+>docker run -it --link redis-server:redis redis redis-cli -h redis
+
+
+				-----
+				Creating networks between containers using networks
+				-----
+
+Docker network is similar to a real network.
+
+1.Creating a network
+
+>docker network create backend-network
+
+2. Connecting containers to the network
+
+>docker run -d --name=redis --net=backend network redis
+
+*Containers communicate using Embedded DNS. This DNS is assigned to all containers via 127.0.0.11 and set in resolve.conf file
+
+* Can create multiple networks.
+
+*When using the connect command it is possible to attach existing containers to the network.
+
+>docker network connect frontend-network redis
+
+
+**Disconnecting containers
+
+>docker network ls
+
+Lists all the network on our host
+
+>docker network inspect <network-name>
+Get more information about the network
+
+>docker network disconnect <docker-name> <service-name>
+Diconnects the service from the network.
+
+
+
+				--------
+				Managing log files
+				-------
+
+> docker logs <service-name>   			----> stdout and stderr output logs
+
+**Syslog is a widely used driver for message logging. 
+**It permits separation of the software that generates messages, the system that stores them, and the software that reports and analyses them.
+
+2. Redirecting logs to syslogs:-
+docker run -d --name redis-syslog --log-driver=syslog redis
+
+3. Disabling logs:-
+
+docker run -d --name redis-syslog --log-driver=none redis
+
+4.Identify the logging configuration for a particular container.
+
+docker inspect --format '{{.HostConfig.LogConfig }}' redis-server (or any service or server created)
+
+
+
+				--------
+				Ensuring Uptime
+				--------
+
+--restart=on-failure:# (Allows us to mention how many times docker should try again.)
+
+--restart=always (Always restart)
+
+
+docker run -d --name restart-3 --restart=on-failure:3 <service-name>
+
+docker run -d --name restart-always --restart=always <service-name>
+
+
+
+				----------
+				Docker metadata and labels
+				----------
+
+-l = value 			------------------>      Assigning a label.
+--label-file=filename 		-------------->          Can be used to assign multiple labels using a file.
+(Can assign multiple labels)
+
+
+docker run -l user=admin -d redis
+
+**labels can be assigned when launching a container.
+
+
+2. Labelling an image.
+
+Have to add the following line in the Dockerfile
+
+LABEL vendor=Katacoda
+
+*If multiple labels have to be added then
+
+LABEL vendor=Katacoda\
+com.katakoda.version=0.0.5\
+date=12-1-2020
+
+
+3.Inspecting the metadata
+
+>docker inspect rd (servicename)
+
+
+*to filter out just the labels 
+
+>docker inspect -f "{{json .Config.Labels}}" rd
+
+3.1.Filtering images and containers using the filter option :-
+
+docker ps --filter "label=user=scrapbook"
+
+docker images --filter "label=vendor-Katacoda"
+
+
+				---------
+				Load balancing Containers
+				---------
+
+docker run -d -p 80:80 -e DEFAULT_HOST=proxy.example -v /var/run/docker.sock:/tmp/docker.sock:ro --name nginx jwilder/nginx-proxy
+
+-e DEFAULTHOST= 		-------> If a request comes and doesnt make in any specified host, this is the place
+					where the request will be handled.
+
+-v 				--------> Mounts connection to docker daemon. It allows containers to access metadata via API. 
+
+:ro 				------> Restricted to read only.
+
+**Can launch multiple load balancing containers. The requests would then be made in a round robin fashion.
+
+2.Check the config file:-
+
+docker exec nginx cat /etc/nginx/conf.d/default.conf
+
+
+				----------
+				Orchestration using Docker compose
+				----------
+
+docker-compose.yml file, defines all of the containers and settings we need to launch a set of clusters.
+
+					\\\\\\\\\\\\\\\\\\\\\\
+1.container_name:
+	property:value
+	-or options
+
+1.1example:-
+
+web:
+	build .	
+				
+
+links:
+	redis
+(Links two containers together.)
+
+ports:
+	"3000"
+
+(Open ports)
+
+redis:
+  image: redis:alpine
+  volumes:
+    - /var/redis/data:/data
+(Define the second container)
+	\\\\\\\\\\\\\\\\\\\\\\\\\\\
+**Multiple containers can be defined inside the docker-compose.yml file.
+
+
+2. Launch application:
+docker-compose up (up for all and up<name> for specific container) -d
+
+docker-compose logs ------> check logs.
+docker-compose ps -----> Current docker compose.
+
+
+3.Docker scaling:
+
+docker-compose scale web=3 
+
+Can scale the number of web containers to launch
+
+4.Stop and remove docker compose:
+docker compose stop
+docker compose rm
+
+
+
+				-------
+				Docker stats
+				------
+**
+When running containers in production, it's important to monitor there runtime metrics,
+such as CPU usage and memory, to ensure they're behaving as expected. These metrics can also help diagnose issues if they occur.
+**
+
+>docker stats <service-name>
+
+>docker ps -a | xargs docker stats (Check stats for all containers)
+
+
+				----------
+				Formatting ps output
+				----------
+
+>docker ps --format '{{.Name}} container is using {{.Image}} image'
+
+>docker ps --format 'table {{.Names}}\t{{.Image}}'
+
+
+**All docker information:-
+
+docker ps -q | xargs docker inspect --format '{{.Id}} - {{ .Name }} - {{.NetworkSettings.IpAddress }}'
+
+
+				-----------
+				DOCKER SWARM
+				-----------
+**Docker uses port 2377 for managing the swarm. The port should be blocked from public access and only
+access by trusted nodes.
+
+*Initialise the swarm mode:-
+
+>docker swarm init
+
+
+*To join a cluster, a token can be obtained using :
+>token=$(ssh -o StrictHostKeyChecking=no 172.17.0.37 "docker swarm join-token -q worker") && echo $token
+
+
+On the second host, 
+
+>docker swarm join 172.17.0.37:2377 --token $token
+
+
+Node will be connected to the cluster. By default the manager will automatically accept the new nodes.
+
+
+>docker node ls (on the manager machine)
+To list all the nodes.
+
+
+***
+Create docker swarm networks
+****
+
+Create an overlay network called skynet
+
+>docker network create -d overlay skynet 
+
+
+**
+Deploying Services
+**
+
+docker service create --name http --network skynet -replicas 2 -p 80:80 katacoda/docker-http-server
+
+//Load balance two servers together creating replicas on port 80. Network is the newly created one
+we initialised above.
+
+
+>docker service ps http 		--------> List all the tasks associated with a service across the cluster.
+
+>docker service scale http=5
+Scale the http service to be running across 5 containers.
+
+
+
+
+
+
+ 
+
+
+
