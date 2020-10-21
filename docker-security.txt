@@ -1,0 +1,184 @@
+				------
+				Docker security
+				------
+--------------------------------------------------------------------------------------------------------------
+1. Vulnerable software versions running inside a container.
+
+Any vulnerable applications running inside a container can be exploited. 
+(Eg:- Shellshock, apache struts RCE,Elasticsearch).
+
+****
+By default Docker drops certain Linux capabilities and blocks syscalls to add a default level of security. 
+As a result, the attacker is isolated and the host protect from different attack angles a hacker might use.
+****
+
+
+----------------------------------------------------------------------------------------------------------------
+
+
+2.Cgroups and Namespaces
+
+Applying security restrictions to a container.
+
+i)Define Memory limits.
+
+*Cgroups can control how much resources a process can use. It also protects the application from resource exhaustion in event of DOS.
+*Prevents memory leak bugs.
+
+--memory 100m				-----> 
+
+ii)Define CPU shares.
+
+Based on shares. How much processing time one process should get compared to another. 
+If the CPU is idle, the first process will use all the resources.
+If second process requires the share, it will be divided.
+
+
+--cpu-shares 0-768			--------> between 0-768. 
+
+(If one process has 768 and the other one has 268, then the share would be 75% and 25% respectively. )
+
+								****NAMESPACES****
+Cgroups control resources for process, namespaces control which processes a container can see.
+
+i) Network namespace:
+
+--net=host 		---> Instead of container being isolated from host, it will have access to host machines network interface.
+
+ii)PID namespace
+Which process a container can see.
+
+--pid=host 		---> Container can see processes running on the host machine.
+******
+CGroups Examples
+
+--cpu-shares
+  --cpuset-cpus
+  --memory-reservation
+  --kernel-memory
+  --blkio-weight (block  IO)
+  --device-read-iops
+  --device-write-iops
+  
+
+Namespace Examples
+
+Cgroup      CLONE_NEWCGROUP   Cgroup root directory
+  IPC         CLONE_NEWIPC      System V IPC, POSIX message queues
+  Network     CLONE_NEWNET      Network devices, stacks, ports, etc.
+  Mount       CLONE_NEWNS       Mount points
+  PID         CLONE_NEWPID      Process IDs
+  User        CLONE_NEWUSER     User and group IDs
+  UTS         CLONE_NEWUTS      Hostname and NIS domain name
+  *****
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+3. Clair scanner 
+
+Used to scan images for vulnerabilites against known CVE's.
+
+
+-----------------------------------------------------------------------------------
+
+4.SecComp.
+
+Defines which system calls should be allowed or not.
+Can define it in a json file. eg :- 1_chmod.json
+
+--security-opt seccomp:1_chmod.json
+
+(Cannot use chmod inside the container.)
+
+Every system uses different syscalls for operations. Can use strace to check for syscalls beind made and then restrict it. 
+Eg:- chmod is blocked but fchmod can be used.
+
+
+---------------------------------------------------------
+
+5.No new privileges flag
+
+--security-opt=no-new-privileges 
+
+
+Build file may have a command which might give additional access to the users on the container. 
+RUN chmod u+s pwn 
+CMD["pwn"]
+
+docker run -u 1000 --security-opt=no-new-privileges pwn (Runs with 1000 uid, if flag is not mentioned, gives root access because of suid.)
+
+
+-----------------------------------------------------------
+
+6.User Namespaces
+
+*By default docker runs as root user on host. Any containers started will have same security context as that of host's root user.
+
+Risk can be migrated if container is run as unprivileged user.
+
+docker run -d --name alpine --user=1000:1000 alpine
+
+BUT SOMETIMES DOCKER REQUIRES ROOT ACCESS.
+
+What user namespace means and does?		---------> root user on container === unprivileged user on the host (can be mapped)
+
+** 
+/etc/docker/daemon.json	==> "userns-remap": "1000:1000"
+
+Docker has to be restarted.
+
+By using User Namespaces, it's possible to separate Docker root users and provide more security and isolation than previously available.
+
+--------------------------------------------------------------
+
+7. AppArmor for Dockers
+
+Can use the tool called bane.
+
+Create a profile and assign it to a container.
+
+Can block some commands.
+
+Bane provides a sample.toml file with some profiles.
+>sudo bane sample.toml
+
+--securit-opt apparmor="apparmor:docker-nginx-sample"
+
+---------------------------------------------------------------
+
+---------------------------------------------------------------
+8.Store secrets using hasicorp vault.
+
+(API keys, passwords, db passwords.)
+
+i)Configuring a data container.
+ii)Create a container to store secrets.
+>docker create -v /config --name config busybox; docker cp vault.hcl config:/config/;
+
+iii)Launch a consul agent.
+Vault will use consul to store data.
+
+ 
+5 tokens and one root key is created when vault is initialised.
+3 of the tokens are required to unseal the vault. 
+1 root token created is required to log in to the vault.
+
+Data is encrypted and stored inside consul.
+Vault can communicate with consul but cannot decrypt the data.
+*****Unsealing is the process of constructing the master key necessary to read the decryption key to decrypt the data
+
+Can check for data in consul UI. However cannot decrypt the strings present without unsealing vault first. 
+
+--------------------
+9.Docker runtime security with falco.
+
+
+--falco.yaml configures the Falco service
+--falco_rules.yaml contains the threat detection patterns
+--falco_events.log will be used as the events log file.
+
+Can setup rules to trigger logs . (Eg:- container running interactive shell, other process running apart from the one that was intended.)
+
+
+
+
+
