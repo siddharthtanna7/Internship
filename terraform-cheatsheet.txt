@@ -1,0 +1,79 @@
+				Terraform - Infrastructre as code. 
+
+						AWS 
+
+Instead of managing resources using UI, you use files.
+---------------------------------------------------------------------------------------
+>terraform init
+
+Initialize terraform, it will download a plugin to interact with the service we are using.
+
+>terraform apply 
+
+Start the service.
+
+>terraform destroy
+
+Destroy(stop) the service created
+
+>terraform fmt
+
+Formates the configuration files.
+
+>terraform validate 
+
+Validates the config files.
+
+>terraform show
+
+Inspect the current state.
+--------------------------------------------------------------------------------
+					**Creating terraform file :-
+
+1. terraform {} block  			-----> Which provider to download.
+
+2. provider{} block 			-----> Configures the named proivder (eg:- aws) 
+
+3. resource{} block 			-----> Defines a piece of infra (Eg :- EC2)
+
+--------------------------------------------------------------------------------
+
+terraformt.tfstate file ----------------> Containes ID's and properties of resource created.
+---------------------------------------------------------------------------------
+
+				Defining input variables 
+
+A separate file can be created to define variables instead of defining it in config files.
+
+eg :- 
+variable.tf :-
+	variable "region" {
+		default="us-west-2"
+}
+
+in main.tf :-
+	provider "aws" {
+		region = var.region
+	}
+
+***Variables can directly be applied while terraform apply -var 'region=us-west-2'
+
+***Persisting variable values, create a file *.tfvars.
+
+**Variable output ----------> can define an output in any .tf file to be shown after the service is started(apply)
+Eg:-
+
+	output "ip" {
+	value = aws.instance.example.id
+
+}
+
+
+----------------------------------------------------------------------------------
+						Terraform cloud :
+
+
+
+
+
+
