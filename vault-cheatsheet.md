@@ -64,6 +64,7 @@ vault write aws/config/root
 
 5.Revoking the secret.
 `vault lease revoke <lease-id>`
+
 -----
 #### Authentication 
 
